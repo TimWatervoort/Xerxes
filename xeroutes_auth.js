@@ -93,11 +93,16 @@ const xepost_auth = async (req, res, next) => {
   }
 
   const tableName = `${req.tableName}`; // declare table name
-  const nameExists = await mw.checkIfExists(tableName, req.body.name); // check if the name exists
+  let uniqueColumn;
+  req.uniqueColumn ? uniqueColumn = req.uniqueColumn : null;
+  if (uniqueColumn) {
+    const nameExists = await mw.checkIfExists(tableName, req.body.name); // check if the name exists
 
-  if (nameExists) {
-    mw.errorCreator('This item already exists!') //send error if name exists
-  } else {
+    if (nameExists) {
+      mw.errorCreator(res, 'This item already exists!') //send error if name exists
+      return;
+    }
+  }
     knex('cookies') //make knex request and insert body
     .insert(req.body)
     .returning('*')
@@ -107,7 +112,6 @@ const xepost_auth = async (req, res, next) => {
     .catch(err => {
       mw.errorCreator(res, err)
     })
-  }
 }
 
 /*
@@ -212,14 +216,24 @@ const xelete_auth = async (req, res, next) => {
     knex(tableName)
     .where('id', req.params.id)
     .del()
-    .then(() => {
-      knex(tableName)
-      .then(result => {
-        res.send(result)
-      })
-      .catch(err => {
-        mw.errorCreator(res, err)
-      })
+    .then(result => {
+
+      // If the xeleteConfig is provided, return what was requested. Otherwise, return the remaining items in the table.
+
+      if (req.xeleteConfig === 'returnNone') {
+        res.send('');
+      } else if (req.xeleteConfig === 'returnOne'){
+        res.send(result);
+      } else {
+        knex(tableName)
+        .then(result => {
+          res.send(result)
+        })
+        .catch(err => {
+          mw.errorCreator(res, err)
+        })
+      }
+
     })
     .catch(err => {
       mw.errorCreator(res, err)
