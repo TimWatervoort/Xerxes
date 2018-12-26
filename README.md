@@ -69,7 +69,7 @@ xethys.xeput requires all fields to be provided, while xethys.xepatch does not.
 
 xethys.xelete by default returns all items left in the table after the deletion, not the deleted item. If you would prefer to have the deleted item, or nothing, returned, pass the following into your xeconfig:
 
-`req.xeleteConfig = 'returnDeleted'`
+`req.xeleteConfig = 'returnOne'`
 
 or
 
